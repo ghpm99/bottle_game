@@ -1,13 +1,35 @@
 import random
 
 
-bottle_colors = ['Vermelho', 'Verde', 'Azul', 'Roxo', 'Laranja', 'Rosa']
+movement_count = 0
+bottle_len = 5
 
 
-def bottle_color(index: int):
-    if index > bottle_colors.__len__():
-        return bottle_colors[0]
-    return bottle_colors[index]
+class bcolors:
+    END = '\033[0m'
+    RED = '\33[31m'
+    GREEN = '\33[32m'
+    BLUE = '\33[34m'
+    PURPLE = '\33[35m'
+    YELLOW = '\33[33m'
+    GRAY = '\33[90m'
+
+    colors = [RED, GREEN, BLUE, PURPLE, YELLOW, GRAY]
+    colors_name = ['Vermelho', 'Verde', 'Azul', 'Roxo', 'Amarelo', 'Cinza']
+
+    def string_colored(self, index: int) -> str:
+        if index > self.colors_name.__len__():
+            index = self.colors_name.__len__()
+        return f'{self.colors[index]} {self.colors_name[index]} {self.END}'
+
+    def color_name_to_index(self, name: str) -> int:
+        if not self.colors_name.__contains__(name):
+            print('Garrafa nao encontrada')
+            return -1
+        return self.colors_name.index(name)
+
+
+bg_colors = bcolors()
 
 
 def mount_bottles():
@@ -21,8 +43,8 @@ def mount_bottles():
 
 
 def compare_bottles(hidden_bottle: list[int], player_bottle: list[int]) -> int:
+    correct_count = 0
     for index, _ in enumerate(hidden_bottle):
-        correct_count = 0
         if hidden_bottle[index] == player_bottle[index]:
             correct_count += 1
 
@@ -30,8 +52,56 @@ def compare_bottles(hidden_bottle: list[int], player_bottle: list[int]) -> int:
 
 
 def print_bottles(bottle_list: list[int]):
+    print('Suas garrafas:')
     for bottle in bottle_list:
-        print(bottle_color(bottle))
+        print(bg_colors.string_colored(bottle), end=' ')
+
+
+def move_bottle(player_bottle: list[int], item: str, target: int):
+    target_index = target - 1
+    if player_bottle.__len__() < target_index:
+        print('Não existem garrafas o suficiente')
+        return
+
+    item_index = bg_colors.color_name_to_index(item)
+    if item_index < 0:
+        return
+
+    item_selected_index = player_bottle.index(item_index)
+    item_selected = player_bottle[item_selected_index]
+    item_target = player_bottle[target_index]
+    player_bottle[target_index] = item_selected
+    player_bottle[item_selected_index] = item_target
+    global movement_count
+    movement_count += 1
+
+
+def is_valid_input(item, target):
+
+    try:
+        target_int = int(target)
+    except ValueError:
+        return False
+
+    if not isinstance(item, str):
+        return False
+    if target_int < 1 and target_int > 6:
+        return False
+
+    return True
+
+
+def input_user():
+    move_input = input().split(' ')
+    while not is_valid_input(move_input[0], move_input[1]):
+        print(
+            'Para mover a Garrafa digite a cor seguida qual casa deseja mover'
+        )
+        print('Exemplo: Vermelho 1')
+        print('Digite a garrafa que deseja mover e para qual posição:')
+        move_input = input().split(' ')
+
+    return move_input[0], int(move_input[1])
 
 
 if __name__.__eq__("__main__"):
@@ -39,3 +109,16 @@ if __name__.__eq__("__main__"):
     correct_bottles = compare_bottles(hidden_bottle, player_bottle)
     print_bottles(player_bottle)
     print(f'Total de garrafas corretas: {correct_bottles}')
+    while correct_bottles < 5:
+        print('Digite a garrafa que deseja mover e para qual posição:')
+        item, target = input_user()
+
+        print(f'Movendo {item} para {target}')
+        move_bottle(player_bottle, item, target)
+        correct_bottles = compare_bottles(hidden_bottle, player_bottle)
+        print_bottles(player_bottle)
+        print(f'Total de garrafas corretas: {correct_bottles}')
+        print('===============================================')
+
+    print('Voce ganhou!')
+    print(f'Total de movimentos: {movement_count}')
