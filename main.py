@@ -23,10 +23,12 @@ class bcolors:
         return f'{self.colors[index]} {self.colors_name[index]} {self.END}'
 
     def color_name_to_index(self, name: str) -> int:
-        if not self.colors_name.__contains__(name):
-            print('Garrafa nao encontrada')
-            return -1
-        return self.colors_name.index(name)
+        for index, color_name in enumerate(self.colors_name):
+            if color_name.lower() == name.lower():
+                return index
+
+        print('Garrafa nao encontrada')
+        return -1
 
 
 bg_colors = bcolors()
@@ -57,20 +59,20 @@ def print_bottles(bottle_list: list[int]):
         print(bg_colors.string_colored(bottle), end=' ')
 
 
-def move_bottle(player_bottle: list[int], item: str, target: int):
-    target_index = target - 1
-    if player_bottle.__len__() < target_index:
-        print('Não existem garrafas o suficiente')
+def move_bottle(player_bottle: list[int], item: str, target: str):
+    target_index = bg_colors.color_name_to_index(target)
+    if target_index < 0:
         return
 
     item_index = bg_colors.color_name_to_index(item)
     if item_index < 0:
         return
 
+    target_selected_index = player_bottle.index(target_index)
     item_selected_index = player_bottle.index(item_index)
     item_selected = player_bottle[item_selected_index]
-    item_target = player_bottle[target_index]
-    player_bottle[target_index] = item_selected
+    item_target = player_bottle[target_selected_index]
+    player_bottle[target_selected_index] = item_selected
     player_bottle[item_selected_index] = item_target
     global movement_count
     movement_count += 1
@@ -95,9 +97,9 @@ def input_user():
     move_input = input().split(' ')
     while not is_valid_input(move_input[0], move_input[1]):
         print(
-            'Para mover a Garrafa digite a cor seguida qual casa deseja mover'
+            'Para mover a Garrafa digite a cor alvo e a cor para ser alterada'
         )
-        print('Exemplo: Vermelho 1')
+        print('Exemplo: Vermelho Verde')
         print('Digite a garrafa que deseja mover e para qual posição:')
         move_input = input().split(' ')
 
@@ -111,7 +113,7 @@ if __name__.__eq__("__main__"):
     print(f'Total de garrafas corretas: {correct_bottles}')
     while correct_bottles < 5:
         print('Digite a garrafa que deseja mover e para qual posição:')
-        item, target = input_user()
+        item, target = input().split(' ')
 
         print(f'Movendo {item} para {target}')
         move_bottle(player_bottle, item, target)
